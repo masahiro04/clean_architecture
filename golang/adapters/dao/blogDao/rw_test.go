@@ -99,10 +99,6 @@ func TestGetAll(t *testing.T) {
 			length:    blogs.Size(),
 			wantError: nil,
 		},
-		// "Not found": {
-		// 	// blogs: &domains.Blogs{},
-		// 	noErr: false,
-		// },
 	}
 
 	for _, tt := range tests {
@@ -129,7 +125,7 @@ func TestGetAll(t *testing.T) {
 func TestGetById(t *testing.T) {
 
 	blog := testData.Blog()
-	// dummyBlog := testData.BlogWithID(100) // 100でnot foud起こす
+	dummyBlog := testData.BlogWithID(100) // 100でnot foud起こす
 	seeds := []interface{}{
 		&blogDao.BlogDto{
 			ID:    blog.ID.Value,
@@ -149,38 +145,36 @@ func TestGetById(t *testing.T) {
 
 	rw := blogDao.New(db)
 
-	tests := map[string]struct {
-		blog  *domains.Blog
-		noErr bool
+	tests := []struct {
+		name      string
+		blog      *domains.Blog
+		wantError error
 	}{
-		"Get a blog": {
-			blog:  &blog,
-			noErr: true,
+		{
+			name:      "Get a blog",
+			blog:      &blog,
+			wantError: nil,
 		},
-		// "record not found": {
-		// 	blog:  &dummyBlog,
-		// 	noErr: false,
-		// },
+		{
+			name:      "Return not found error",
+			blog:      &dummyBlog,
+			wantError: gorm.ErrRecordNotFound,
+		},
 	}
 
-	for name, tt := range tests {
+	for _, tt := range tests {
 		tt := tt
-		t.Run(name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			// TODO(okubo): parallelの方が圧倒的に早いけど、goroutineの影響？で
 			// db.Close()のタイミング合わないので、一旦は並行処理は断念
 			// t.Parallel()
 
 			_, err := rw.GetById(tt.blog.ID.Value)
-
-			if tt.noErr {
+			if tt.wantError == nil {
 				assert.NoError(t, err)
-				// assert.Equal(t, b.Title.Value, blog.Title.Value)
-				// assert.Equal(t, b.Body.Value, blog.Body.Value)
 			} else {
-				fmt.Println("haitta")
-				fmt.Println(err.Error() == "record not found")
-				// fmt.Println(err)
-				assert.NoError(t, err)
+				assert.Error(t, err)
+				assert.Equal(t, err, tt.wantError)
 			}
 		})
 	}
