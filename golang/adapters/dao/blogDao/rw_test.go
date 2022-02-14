@@ -78,14 +78,6 @@ func TestGetAll(t *testing.T) {
 		},
 	}
 
-	// for _, b := range blogs.Value {
-	// 	seeds = append(seeds, &blogDao.BlogDto{
-	// 		ID:    b.ID.Value,
-	// 		Title: b.Title.Value,
-	// 		Body:  b.Body.Value,
-	// 	})
-	// }
-
 	db, err := Prepare("users_dao", seeds)
 
 	sqlDB, _ := db.DB()
@@ -97,12 +89,15 @@ func TestGetAll(t *testing.T) {
 
 	rw := blogDao.New(db)
 
-	tests := map[string]struct {
-		// blogs *[]domains.Blog
-		noErr bool
+	tests := []struct {
+		name      string
+		length    int
+		wantError error
 	}{
-		"Get blogs": {
-			noErr: true,
+		{
+			name:      "Get blogs",
+			length:    blogs.Size(),
+			wantError: nil,
 		},
 		// "Not found": {
 		// 	// blogs: &domains.Blogs{},
@@ -110,21 +105,19 @@ func TestGetAll(t *testing.T) {
 		// },
 	}
 
-	for name, tt := range tests {
+	for _, tt := range tests {
 		// NOTE(okubo): ttにtt入れるとparallelのscopeの問題を回避できるので、一旦そのままで実装してます
 		tt := tt
-		t.Run(name, func(t *testing.T) {
+		t.Run(tt.name, func(t *testing.T) {
 			// TODO(okubo): parallelの方が圧倒的に早いけど、goroutineの影響？で
 			// db.Close()のタイミング合わないので、一旦は並行処理は断念
 			// t.Parallel()
 
 			b, err := rw.GetAll()
-			fmt.Println(b)
-			fmt.Println(b.Size())
 
-			if tt.noErr {
+			if tt.wantError == nil {
 				assert.NoError(t, err)
-				assert.Equal(t, b.Size(), len(blogs.Value))
+				assert.Equal(t, b.Size(), tt.length)
 			} else {
 				assert.Error(t, err)
 			}
