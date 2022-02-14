@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TODO: 単体だと動くけど、NewTest/Prepareは一度しか動かない。parallelだけでなく、db connectionそもそもの問題のようなきも。。。。
 func TestGetAll(t *testing.T) {
 
 	blogs := testData.Blogs(5)
@@ -68,7 +67,6 @@ func TestGetAll(t *testing.T) {
 			// t.Parallel()
 
 			b, err := rw.GetAll()
-
 			if tt.wantError == nil {
 				assert.NoError(t, err)
 				assert.Equal(t, b.Size(), tt.length)

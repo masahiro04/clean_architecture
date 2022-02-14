@@ -8,22 +8,13 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
-func TestGetById(t *testing.T) {
-
+func TestCreate(t *testing.T) {
 	blog := testData.Blog()
-	dummyBlog := testData.BlogWithID(100) // 100でnot foud起こす
-	seeds := []interface{}{
-		&blogDao.BlogDto{
-			ID:    blog.ID.Value,
-			Title: blog.Title.Value,
-			Body:  blog.Body.Value,
-		},
-	}
+	seeds := []interface{}{}
 
-	db, err := Prepare("user_dao", seeds)
+	db, err := Prepare("user_create_dao", seeds)
 
 	sqlDB, _ := db.DB()
 	defer sqlDB.Close()
@@ -40,21 +31,20 @@ func TestGetById(t *testing.T) {
 		wantError error
 	}{
 		{
-			name:      "Get a blog",
-			blog:      &blog,
+			name:      "Create a blog",
 			wantError: nil,
 		},
-		{
-			name:      "Return not found error",
-			blog:      &dummyBlog,
-			wantError: gorm.ErrRecordNotFound,
-		},
+		// {
+		// 	name:      "Return not found error",
+		// 	blog:      &dummyBlog,
+		// 	wantError: gorm.ErrRecordNotFound,
+		// },
 	}
 
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := rw.GetById(tt.blog.ID.Value)
+			_, err := rw.Create(blog)
 			if tt.wantError == nil {
 				assert.NoError(t, err)
 			} else {
